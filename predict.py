@@ -182,7 +182,7 @@ def main():
     print("How strong do you want the model to be?")
 
     #get variance from user
-    variance = input("Enter 0 for weak (short runtime), 1 for strong (long runtime)\n")
+    variance = int(input("Enter 0 for weak (short runtime), 1 for strong (long runtime)\n"))
     while variance != 0 or variance != 1:
         if variance == 0 or variance == 1:
             break
