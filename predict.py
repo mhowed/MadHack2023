@@ -13,7 +13,7 @@ import yfinance as yahoo
 import os.path
 
 
-def prediction(ticker, useOldModel = False):
+def prediction(ticker, useOldModel = False ):
     currtime = datetime.now().strftime('%Y-%m-%d')
     print(currtime, type(currtime))
     df = None
