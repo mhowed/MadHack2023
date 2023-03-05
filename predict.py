@@ -163,6 +163,7 @@ def plot(train, valid, predictions, ticker):
     plt.plot(valid[['Close', 'Predictions']])
     plt.legend(['Train', 'Real', 'Predictions'], loc='upper left')
     plt.savefig(f"images/{ticker}.png")
+    plt.show()
 
     print("Prediction for next close:", str(predictions[-1])[1:-1])
 
