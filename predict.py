@@ -20,8 +20,6 @@ import os.path
 import absl.logging
 
 
-
-
 def prediction(ticker, useOldModel=False):
     currtime = datetime.now().strftime('%Y-%m-%d')
     df = None
@@ -57,7 +55,10 @@ def prediction(ticker, useOldModel=False):
     days = 60
 
     scaler = MinMaxScaler(feature_range=(0, 1))
-    scaled_data = scaler.fit_transform(dataset)
+
+    scaled_data = scaler.fit_transform(dataset, dataset.shape)
+    print(dataset)
+    print(scaled_data)
 
     # Checks if a model is saved
     if useOldModel and os.path.isfile(f"data/{ticker}/saved_model.pb"):
@@ -81,18 +82,17 @@ def prediction(ticker, useOldModel=False):
         x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
 
         model = Sequential([
-            LSTM(50, return_sequences =True, input_shape = (x_train.shape[1],1)),
-            LSTM(50, return_sequences = False),
+            LSTM(50, return_sequences=True, input_shape=(x_train.shape[1], 1)),
+            LSTM(50, return_sequences=False),
             Dense(25),
             Dense(1)
         ])
 
         # compile
-        model.compile(optimizer='adamax', loss='mse')
+        model.compile(optimizer='adam', loss='mse')
 
         # fit using x,y,every piece of data,only 1 run
         model.fit(x_train, y_train, batch_size=1, epochs=1)
-
 
     test = scaled_data[train_len - days:, :]
 
@@ -110,12 +110,13 @@ def prediction(ticker, useOldModel=False):
 
     # Get the models predicted price values
     predictions = model.predict(x_test)
+
     predictions = scaler.inverse_transform(predictions)
 
     # Get the root mean squared error (RMSE)
     rmse = np.sqrt(np.mean(predictions - y_test)**2)
     rmse
-    print("RMSE:",rmse)
+    print("RMSE:", rmse)
 
     # get data we didnt touch
     valid = data[train_len:]
@@ -123,7 +124,6 @@ def prediction(ticker, useOldModel=False):
     train = data[:train_len]
     valid['Predictions'] = predictions
 
-    #print(model.summary())
     return train, valid, predictions, ticker, model
 
 
@@ -145,7 +145,6 @@ def main():
     pd.options.mode.chained_assignment = None
     absl.logging.set_verbosity(absl.logging.ERROR)
 
-
     train, valid, predictions, ticker, model = prediction('AAPL', True)
 
     # make sure good start
@@ -154,8 +153,8 @@ def main():
     pred = x["Predictions"].values
     print("Real / Pred:", real/pred)
 
-    while real/pred > 1.02 or real/pred < 0.98:
-        train, valid, predictions, ticker, model= prediction('AAPL')
+    while (real/pred) > 1.02 or (real/pred) < 0.98:
+        train, valid, predictions, ticker, model = prediction('AAPL')
         x = valid.head(1)
         real = x["Close"].values
         pred = x["Predictions"].values
