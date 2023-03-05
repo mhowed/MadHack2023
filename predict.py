@@ -156,16 +156,18 @@ matplotlib.
 def plot(train, valid, predictions, ticker):
     # plot data
     plt.figure(figsize=(10, 6))
-    plt.title('Model')
+    title = "Prediction for next close:", str(predictions[-1])[1:-1]
+    plt.title(title)
     plt.xlabel('Date')
     plt.ylabel('Close Price')
     plt.plot(train['Close'])
     plt.plot(valid[['Close', 'Predictions']])
     plt.legend(['Train', 'Real', 'Predictions'], loc='upper left')
     plt.savefig(f"images/{ticker}.png")
+    print("Prediction for next close:", str(predictions[-1])[1:-1])
+
     plt.show()
 
-    print("Prediction for next close:", str(predictions[-1])[1:-1])
 
 """ 
 Main function
