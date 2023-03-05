@@ -1,6 +1,7 @@
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense, LSTM
+from keras.models import load_model
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,10 +11,9 @@ from polygon.rest import models
 import pandas as pd
 import yfinance as yahoo
 import os.path
-import json
 
 
-def prediction(ticker):
+def prediction(ticker, useOldModel = False):
     currtime = datetime.now().strftime('%Y-%m-%d')
     print(currtime, type(currtime))
     df = None
@@ -37,42 +37,52 @@ def prediction(ticker):
     data = df.filter(["Close"])
     dataset = data.values
 
-
     train_split = .80
 
     train_len = math.ceil(len(dataset) * train_split)
 
+    days = 60
+
     scaler = MinMaxScaler(feature_range=(0,1))
     scaled_data = scaler.fit_transform(dataset)
 
-    train_data = scaled_data[0:train_len, :]
+    # Checks if a model is saved
+    if useOldModel and os.path.isfile(f"data/{ticker}/saved_model.pb"):
 
-    x_train = []
-    y_train = []
+        # Check that the model exists
+        model = load_model(f"data/{ticker}")
 
-    days = 60
+    else :
 
-    for i in range(days, len(train_data)):
-        x_train.append(train_data[i-days:i, 0])
-        y_train.append(train_data[i,0])
-            
-    x_train, y_train = np.array(x_train), np.array(y_train)
-    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+        
+        train_data = scaled_data[0:train_len, :]
 
-    model = Sequential()
-    model.add(LSTM(50, return_sequences=True, input_shape = (x_train.shape[1],1)))
-    model.add(LSTM(50, return_sequences=False))
-    model.add(Dense(25))
-    #model.add(Dense(25))
-    model.add(Dense(1))
+        x_train = []
+        y_train = []
 
-    #compile
-    model.compile(optimizer='adam', loss='mean_squared_error')
+        for i in range(days, len(train_data)):
+            x_train.append(train_data[i-days:i, 0])
+            y_train.append(train_data[i,0])
+                
+        x_train, y_train = np.array(x_train), np.array(y_train)
+        x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
 
-    #fit using x,y,every piece of data,only 1 run
-    model.fit(x_train, y_train, batch_size=1, epochs=1)
+        model = Sequential()
+        model.add(LSTM(50, return_sequences=True, input_shape = (x_train.shape[1],1)))
+        model.add(LSTM(50, return_sequences=False))
+        model.add(Dense(25))
+        #model.add(Dense(25))
+        model.add(Dense(1))
+
+        #compile
+        model.compile(optimizer='adam', loss='mean_squared_error')
+
+        #fit using x,y,every piece of data,only 1 run
+        model.fit(x_train, y_train, batch_size=1, epochs=1)
+
 
     test = scaled_data[train_len - days: , :]
+
     #Create the data set x_test and y_test
     x_test = []
     y_test = dataset[train_len:, :]
@@ -87,6 +97,7 @@ def prediction(ticker):
 
     #Get the models predicted price values
     predictions = model.predict(x_test)
+    model.save(f"data/{ticker}")
     predictions = scaler.inverse_transform(predictions)
 
 
@@ -116,6 +127,6 @@ def prediction(ticker):
     print(valid)
 
 def main():
-    prediction('AAPL')
+    prediction('AAPL', True)
 
 main()
