@@ -17,14 +17,18 @@ from datetime import datetime
 import pandas as pd
 import yfinance as yahoo
 import os.path
+import absl.logging
+
+
 
 
 def prediction(ticker, useOldModel=False):
     currtime = datetime.now().strftime('%Y-%m-%d')
-    print(currtime, type(currtime))
     df = None
     if not os.path.exists("data"):
         os.mkdir("data")
+    if not os.path.exists("images"):
+        os.mkdir("images")
 
     if os.path.isfile(f"data/{ticker}.csv"):
         dateOfFile = datetime.fromtimestamp(os.path.getmtime(
@@ -76,23 +80,19 @@ def prediction(ticker, useOldModel=False):
 
         x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
 
-        model = Sequential()
-        model.add(LSTM(50, return_sequences=True,
-                       input_shape=(x_train.shape[1], 1)))
-        model.add(LSTM(25, return_sequences=False))
-        model.add(Dense(25))
-        # model.add(Dense(25))
-        model.add(Dense(1))
+        model = Sequential([
+            LSTM(50, return_sequences =True, input_shape = (x_train.shape[1],1)),
+            LSTM(50, return_sequences = False),
+            Dense(25),
+            Dense(1)
+        ])
 
         # compile
-        model.compile(optimizer='adam', loss='mean_squared_error')
-        # compile
+        model.compile(optimizer='adamax', loss='mse')
 
         # fit using x,y,every piece of data,only 1 run
         model.fit(x_train, y_train, batch_size=1, epochs=1)
 
-    test = scaled_data[train_len - days:, :]
-    # Create the data set x_test and y_test
 
     test = scaled_data[train_len - days:, :]
 
@@ -115,7 +115,7 @@ def prediction(ticker, useOldModel=False):
     # Get the root mean squared error (RMSE)
     rmse = np.sqrt(np.mean(predictions - y_test)**2)
     rmse
-    print(rmse)
+    print("RMSE:",rmse)
 
     # get data we didnt touch
     valid = data[train_len:]
@@ -123,13 +123,13 @@ def prediction(ticker, useOldModel=False):
     train = data[:train_len]
     valid['Predictions'] = predictions
 
-    print(model.summary())
+    #print(model.summary())
     return train, valid, predictions, ticker, model
 
 
 def plot(train, valid, predictions, ticker):
     # plot data
-    plt.figure(figsize=(16, 8))
+    plt.figure(figsize=(10, 6))
     plt.title('Model')
     plt.xlabel('Date')
     plt.ylabel('Close Price')
@@ -138,29 +138,33 @@ def plot(train, valid, predictions, ticker):
     plt.legend(['Train', 'Real', 'Predictions'], loc='upper left')
     plt.savefig(f"images/{ticker}.png")
 
-    print(predictions[-1])
+    print("Prediction for next close:", str(predictions[-1])[1:-1])
 
 
 def main():
     pd.options.mode.chained_assignment = None
+    absl.logging.set_verbosity(absl.logging.ERROR)
 
-    train, valid, predictions, ticker, model = prediction('GOOGL', True)
+
+    train, valid, predictions, ticker, model = prediction('AAPL', True)
 
     # make sure good start
     x = valid.head(1)
     real = x["Close"].values
     pred = x["Predictions"].values
-    print(real/pred)
+    print("Real / Pred:", real/pred)
 
     while real/pred > 1.02 or real/pred < 0.98:
-        train, valid, predictions, rmse = prediction('GOOGL')
+        train, valid, predictions, ticker, model= prediction('AAPL')
         x = valid.head(1)
         real = x["Close"].values
         pred = x["Predictions"].values
-        print(real/pred)
+        print("Real / Pred:", real/pred)
 
     model.save(f"data/{ticker}")
+
     plot(train, valid, predictions, ticker)
 
 
-main()
+if __name__ == "__main__":
+    main()
