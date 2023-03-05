@@ -118,10 +118,10 @@ def prediction(ticker, useOldModel = False):
     train = data[:train_len]
     valid['Predictions'] = predictions
 
-    return train, valid, predictions, rmse
+    return train, valid, predictions, rmse, ticker
 
 
-def plot(train, valid, predictions):
+def plot(train, valid, predictions, ticker):
     # plot data
     plt.figure(figsize=(16, 8))
     plt.title('Model')
@@ -130,7 +130,7 @@ def plot(train, valid, predictions):
     plt.plot(train['Close'])
     plt.plot(valid[['Close', 'Predictions']])
     plt.legend(['Train', 'Real', 'Predictions'], loc='upper left')
-    plt.savefig('image.png')
+    plt.savefig(f"images/{ticker}.png")
 
     print(predictions[-1])
 
@@ -139,7 +139,7 @@ def main():
     pd.options.mode.chained_assignment = None
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-    train, valid, predictions, rmse = prediction('AAPL', True)
+    train, valid, predictions, rmse, ticker = prediction('AAPL', True)
 
     # make sure good start
     x = valid.head(1)
@@ -154,7 +154,7 @@ def main():
         pred = x["Predictions"].values
         print(real/pred)
 
-    plot(train, valid, predictions)
+    plot(train, valid, predictions, ticker)
 
 
 main()
