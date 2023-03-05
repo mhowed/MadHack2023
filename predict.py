@@ -19,7 +19,7 @@ import yfinance as yahoo
 import os.path
 
 
-def prediction(ticker, useOldModel = False):
+def prediction(ticker, useOldModel=False):
     currtime = datetime.now().strftime('%Y-%m-%d')
     print(currtime, type(currtime))
     df = None
@@ -50,7 +50,6 @@ def prediction(ticker, useOldModel = False):
 
     train_len = math.ceil(len(dataset) * train_split)
 
-
     days = 60
 
     scaler = MinMaxScaler(feature_range=(0, 1))
@@ -62,9 +61,8 @@ def prediction(ticker, useOldModel = False):
         # Check that the model exists
         model = load_model(f"data/{ticker}")
 
-    else :
+    else:
 
-        
         train_data = scaled_data[0:train_len, :]
 
         x_train = []
@@ -73,14 +71,14 @@ def prediction(ticker, useOldModel = False):
         for i in range(days, len(train_data)):
             x_train.append(train_data[i-days:i, 0])
             y_train.append(train_data[i, 0])
-    
+
         x_train, y_train = np.array(x_train), np.array(y_train)
-    
+
         x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
 
         model = Sequential()
         model.add(LSTM(50, return_sequences=True,
-              input_shape=(x_train.shape[1], 1)))
+                       input_shape=(x_train.shape[1], 1)))
         model.add(LSTM(25, return_sequences=False))
         model.add(Dense(25))
         # model.add(Dense(25))
@@ -88,17 +86,17 @@ def prediction(ticker, useOldModel = False):
 
         # compile
         model.compile(optimizer='adam', loss='mean_squared_error')
-            #compile
+        # compile
 
-        #fit using x,y,every piece of data,only 1 run
+        # fit using x,y,every piece of data,only 1 run
         model.fit(x_train, y_train, batch_size=1, epochs=1)
 
     test = scaled_data[train_len - days:, :]
     # Create the data set x_test and y_test
 
-    test = scaled_data[train_len - days: , :]
+    test = scaled_data[train_len - days:, :]
 
-    #Create the data set x_test and y_test
+    # Create the data set x_test and y_test
     x_test = []
     y_test = dataset[train_len:, :]
     for i in range(days, len(test)):
@@ -129,7 +127,6 @@ def prediction(ticker, useOldModel = False):
     return train, valid, predictions, ticker, model
 
 
-
 def plot(train, valid, predictions, ticker):
     # plot data
     plt.figure(figsize=(16, 8))
@@ -146,7 +143,6 @@ def plot(train, valid, predictions, ticker):
 
 def main():
     pd.options.mode.chained_assignment = None
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
     train, valid, predictions, ticker, model = prediction('GOOGL', True)
 
