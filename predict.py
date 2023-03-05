@@ -17,7 +17,9 @@ def prediction(ticker):
     currtime = datetime.now().strftime('%Y-%m-%d')
     print(currtime, type(currtime))
     df = None
-
+    if not os.path.exists("data"):
+        os.mkdir("data")
+        
     if os.path.isfile(f"data/{ticker}.csv"):
         dateOfFile = datetime.fromtimestamp(os.path.getmtime(f"data/{ticker}.csv")).strftime('%Y-%m-%d')
         
@@ -87,6 +89,7 @@ def prediction(ticker):
     predictions = model.predict(x_test)
     predictions = scaler.inverse_transform(predictions)
 
+
     #Get the root mean squared error (RMSE)
     rmse = np.sqrt(np.mean(predictions - y_test)**2)
     rmse
@@ -109,6 +112,8 @@ def prediction(ticker):
     plt.savefig('image.png')
 
     print(predictions[-1])
+
+    print(valid)
 
 def main():
     prediction('AAPL')
