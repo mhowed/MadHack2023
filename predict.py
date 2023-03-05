@@ -1,3 +1,11 @@
+'''
+Information on TensorFlow, and more specifically LSTM and Dense was found on
+https://medium.com/analytics-vidhya/long-short-term-memory-networks-lstm-in-tensorflow-e986dac5cf27
+https://www.geeksforgeeks.org/long-short-term-memory-lstm-rnn-in-tensorflow/
+https://www.youtube.com/watch?v=IrPhMM_RUmg
+
+'''
+
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense, LSTM
