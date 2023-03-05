@@ -169,6 +169,7 @@ def plot(train, valid, predictions, ticker):
     plt.plot(valid[['Close', 'Predictions']])
     plt.legend(['Train', 'Real', 'Predictions'], loc='upper left')
     plt.savefig(f"images/{ticker}.png")
+    plt.show()
 
     print("Prediction for next close:", str(predictions[-1])[1:-1])
 
@@ -177,6 +178,7 @@ Main function
 The main function that runs the predicion from the user
 """
 
+""""
 def main():
     #remove pd and save model warnings
     pd.options.mode.chained_assignment = None
@@ -204,3 +206,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+"""
