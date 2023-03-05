@@ -32,6 +32,7 @@ It then runs the Model using a 60 day training period with a train split of 80%
 """
 
 def prediction(ticker, useOldModel=False):
+
     # gets the current date
     currtime = datetime.now().strftime('%Y-%m-%d')
     df = None
@@ -76,8 +77,6 @@ def prediction(ticker, useOldModel=False):
     scaler = MinMaxScaler(feature_range=(0, 1))
 
     scaled_data = scaler.fit_transform(dataset, dataset.shape)
-    print(dataset)
-    print(scaled_data)
 
     # Checks if a model is saved and the user want's to use the previous model
     if useOldModel and os.path.isfile(f"data/{ticker}/saved_model.pb"):
@@ -139,11 +138,6 @@ def prediction(ticker, useOldModel=False):
     # convert back to USD
     predictions = scaler.inverse_transform(predictions)
 
-    # Calculate the Root Mean Squared Error
-    rmse = np.sqrt(np.mean(predictions - y_test)**2)
-    rmse
-    print("RMSE:", rmse)
-
     # get data we didnt touch
     valid = data[train_len:]
     
@@ -182,21 +176,38 @@ def main():
     pd.options.mode.chained_assignment = None
     absl.logging.set_verbosity(absl.logging.ERROR)
 
-    train, valid, predictions, ticker, model = prediction('AAPL', True)
+    #get ticker from user
+    tix = input("What Stock ticker do you want to predict?\n")
+    print("How strong do you want the model to be?")
+
+    #get variance from user
+    variance = input("Enter 0 for weak (short runtime), 1 for strong (long runtime)\n")
+    while variance != 0 or variance != 1:
+        if variance == 0 or variance == 1:
+            break
+        variance = input("This was not a valid input. Please enter 0, or 1\n")
+
+    # fix variance
+    if variance == 0:
+        variance = .1
+    elif variance == 1:
+        variance = .02
+    train, valid, predictions, ticker, model = prediction(tix, True)
+
 
     # make sure good start
     x = valid.head(1)
     real = x["Close"].values
     pred = x["Predictions"].values
-    print("Real / Pred:", real/pred)
 
-    while (real/pred) > 1.02 or (real/pred) < 0.98:
-        train, valid, predictions, ticker, model = prediction('AAPL')
+    #repeat until data start is good, error checking
+    while (real/pred) > 1+variance or (real/pred) < 1-variance:
+        train, valid, predictions, ticker, model = prediction(tix)
         x = valid.head(1)
         real = x["Close"].values
         pred = x["Predictions"].values
-        print("Real / Pred:", real/pred)
 
+    #save the model
     model.save(f"data/{ticker}")
 
     plot(train, valid, predictions, ticker)
