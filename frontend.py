@@ -109,8 +109,10 @@ class PredictFrontEnd(customtkinter.CTkFrame):
 
         model.save(f"data/{ticker}")
         print("Prediction for the next close:", str(predictions[-1])[1:-1])
+        self.prediction = customtkinter.CTkLabel(self.master, text_color="#70476b", text=str(predictions[-1])[1:-1])
+        self.prediction.place(relx=.50, rely=.50)
 
-        self.canvas.place(relx=.50, rely=.50, anchor=customtkinter.CENTER)
+        #self.canvas.place(relx=.50, rely=.50, anchor=customtkinter.CENTER)
         #img = f"images/{ticker}.png"
         #self.canvas.create_image(20, 20, anchor=customtkinter.CENTER, image=img)
 
