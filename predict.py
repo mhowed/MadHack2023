@@ -81,7 +81,7 @@ def prediction(ticker, useOldModel = False):
         model = Sequential()
         model.add(LSTM(50, return_sequences=True,
               input_shape=(x_train.shape[1], 1)))
-        model.add(LSTM(50, return_sequences=False))
+        model.add(LSTM(25, return_sequences=False))
         model.add(Dense(25))
         # model.add(Dense(25))
         model.add(Dense(1))
@@ -112,7 +112,6 @@ def prediction(ticker, useOldModel = False):
 
     # Get the models predicted price values
     predictions = model.predict(x_test)
-    model.save(f"data/{ticker}")
     predictions = scaler.inverse_transform(predictions)
 
     # Get the root mean squared error (RMSE)
@@ -126,7 +125,9 @@ def prediction(ticker, useOldModel = False):
     train = data[:train_len]
     valid['Predictions'] = predictions
 
-    return train, valid, predictions, rmse, ticker
+    print(model.summary())
+    return train, valid, predictions, ticker, model
+
 
 
 def plot(train, valid, predictions, ticker):
@@ -147,7 +148,7 @@ def main():
     pd.options.mode.chained_assignment = None
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-    train, valid, predictions, rmse, ticker = prediction('AAPL', True)
+    train, valid, predictions, ticker, model = prediction('GOOGL', True)
 
     # make sure good start
     x = valid.head(1)
@@ -156,12 +157,13 @@ def main():
     print(real/pred)
 
     while real/pred > 1.02 or real/pred < 0.98:
-        train, valid, predictions, rmse = prediction('AAPL')
+        train, valid, predictions, rmse = prediction('GOOGL')
         x = valid.head(1)
         real = x["Close"].values
         pred = x["Predictions"].values
         print(real/pred)
 
+    model.save(f"data/{ticker}")
     plot(train, valid, predictions, ticker)
 
 
